@@ -1,7 +1,18 @@
+import "dotenv/config";
 import puppeteer, { HTTPRequest, Page } from "puppeteer";
 import express from "express";
+import helmet from "helmet";
+import cors from "cors";
 
 const app = express();
+const PORT = Number(process.env.PORT || 3000);
+
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+app.use(helmet());
 
 app.get("/", async (req, res) => {
   const { subreddit } = req.query;
@@ -71,4 +82,4 @@ async function extractPostsFromPage(page: Page) {
   });
 }
 
-app.listen(3000, () => console.log(`Listening port : ${3000}`));
+app.listen(PORT, () => console.log(`Listening port : ${PORT}`));
