@@ -13,6 +13,11 @@ app.get("/", async (req, res) => {
   }
 
   const parsedSubReddit = subreddit.trim().toLowerCase();
+
+  if (!subreddit.length) {
+    return res.status(400).json({ error: "Invalid subreddit name" });
+  }
+
   const browser = await puppeteer.launch({
     headless: true,
     args: ["--no-sandbox"],
