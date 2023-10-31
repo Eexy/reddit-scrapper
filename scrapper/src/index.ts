@@ -1,7 +1,10 @@
 import puppeteer, { HTTPRequest, Page } from "puppeteer";
 
 async function main() {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox"],
+  });
   const page = await browser.newPage();
 
   page.setRequestInterception(true);
