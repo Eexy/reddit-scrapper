@@ -1,6 +1,18 @@
 import puppeteer, { HTTPRequest, Page } from "puppeteer";
+import express from "express";
 
-async function main() {
+const app = express();
+
+app.get("/", async (req, res) => {
+  const { subreddit } = req.query;
+
+  if (typeof subreddit !== "string") {
+    return res
+      .status(400)
+      .json({ error: "Missing or invalid subreddit query params" });
+  }
+
+  const parsedSubReddit = subreddit.trim().toLowerCase();
   const browser = await puppeteer.launch({
     headless: true,
     args: ["--no-sandbox"],
@@ -10,15 +22,16 @@ async function main() {
   page.setRequestInterception(true);
   page.on("request", blockUselessNetworkRequest);
 
-  await page.goto("https://old.reddit.com/r/programming", {
+  await page.goto(`https://old.reddit.com/r/${parsedSubReddit}`, {
     waitUntil: "domcontentloaded",
   });
 
   const posts = await extractPostsFromPage(page);
-  console.info(posts);
 
   await browser.close();
-}
+
+  return res.json(posts);
+});
 
 function blockUselessNetworkRequest(req: HTTPRequest) {
   // block script, css, images
@@ -53,4 +66,4 @@ async function extractPostsFromPage(page: Page) {
   });
 }
 
-main().then(() => console.info("end"));
+app.listen(3000, () => console.log(`Listening port : ${3000}`));
