@@ -29,7 +29,13 @@ module.exports = {
     "no-await-in-loop": "error",
     "no-duplicate-imports": "error",
     "no-self-compare": "error",
-    "no-use-before-define": "error",
+    "no-use-before-define": [
+      "error",
+      {
+        functions: false,
+        variables: true,
+      },
+    ],
     "block-scoped-var": "error",
     "default-case": "error",
     "default-case-last": "error",
