@@ -71,12 +71,15 @@ async function extractPostsFromPage(page: Page) {
     return things.map((thing) => {
       return {
         id: thing.getAttribute("id"),
-        author: thing.getAttribute("data-author"),
-        subreddit: thing.getAttribute("data-subreddit"),
+        authorName: thing.getAttribute("data-author"),
+        authorId: thing.getAttribute("data-author-fullname"),
+        subredditName: thing.getAttribute("data-subreddit"),
+        subredditId: thing.getAttribute("data-subreddit-fullname"),
         link: thing.getAttribute("data-permalink"),
         createdAt: new Date(
           Number(thing.getAttribute("data-timestamp"))
         ).toISOString(),
+        title: thing.querySelector<HTMLElement>("a.title")?.innerText || "",
       };
     });
   });
