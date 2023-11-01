@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint ./src/** --fix --max-warnings 0 ",
+    "lint": "eslint ../src/** --fix --max-warnings 0 ",
     "format:fix": "prettier --write .",
     "start": "ts-node-dev ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
