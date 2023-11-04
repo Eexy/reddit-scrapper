@@ -3,6 +3,8 @@ import puppeteer, { HTTPRequest, Page } from "puppeteer";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import { Post } from "./types/post";
+import { Comment } from "./types/comment";
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -38,15 +40,54 @@ app.get("/", async (req, res) => {
   page.setRequestInterception(true);
   page.on("request", blockUselessNetworkRequest);
 
-  await page.goto(`https://old.reddit.com/r/${parsedSubReddit}`, {
+  const subredditUrl = `https://old.reddit.com/r/${parsedSubReddit}`;
+  await page.goto(subredditUrl, {
     waitUntil: "domcontentloaded",
   });
 
   const posts = await extractPostsFromPage(page);
+  const postsComments = await Promise.all(
+    posts.map(async (post) => {
+      const postPage = await browser.newPage();
+      postPage.setRequestInterception(true);
+      postPage.on("request", blockUselessNetworkRequest);
+
+      await postPage.goto(`https://old.reddit.com/${post.link}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      const comments = await postPage.$$eval(
+        ".nestedlisting > .comment",
+        (nodes) => {
+          return nodes.map((node) => {
+            function extractComment(el: Element): Comment {
+              return {
+                id: el.getAttribute("id"),
+                authorName: el.getAttribute("data-author"),
+                authorId: el.getAttribute("data-author-fullname"),
+                content:
+                  el.querySelector<HTMLElement>(".entry form p")?.innerText,
+                comments: [
+                  ...el.querySelectorAll(".child > div > .comment"),
+                ].map(extractComment),
+              };
+            }
+
+            return extractComment(node);
+          });
+        }
+      );
+
+      return {
+        ...post,
+        comments,
+      };
+    })
+  );
 
   await browser.close();
 
-  return res.json(posts);
+  return res.json(postsComments);
 });
 
 function blockUselessNetworkRequest(req: HTTPRequest) {
@@ -66,7 +107,7 @@ function blockUselessNetworkRequest(req: HTTPRequest) {
   }
 }
 
-async function extractPostsFromPage(page: Page) {
+async function extractPostsFromPage(page: Page): Promise<Post[]> {
   return await page.$$eval(".thing[data-promoted=false]", (things) => {
     return things.map((thing) => {
       return {
